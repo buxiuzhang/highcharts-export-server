@@ -1,17 +1,14 @@
 package com.example.demo.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.demo.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import sun.misc.BASE64Decoder;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -62,11 +59,13 @@ public class HighchartsController {
             result.put("msg","json格式错误");
             return result;
         }
+        FileUtils fileUtils=    FileUtils.getInstance();
+
         //生成为id
         String uuid=UUID.randomUUID().toString().replaceAll("-","");
         String inFileName="./"+uuid+".json";
         try {
-            writeFileState(inFileName,json);
+            fileUtils.writeFileState(inFileName,json);
         } catch (IOException e) {
             logger.error("IO关闭异常",e);
             result.put("code",500);
@@ -92,7 +91,7 @@ public class HighchartsController {
                 inBr.close(); in .close();
 
                 //将文件转换 base64 字符串
-                byteOutStream = readFileState(outfileName);
+                byteOutStream = fileUtils.readFileState(outfileName);
                 String base64=Base64.getEncoder().encodeToString(byteOutStream.toByteArray());
 
                 result.put("data",base64);
@@ -123,60 +122,6 @@ public class HighchartsController {
 
     }
 
-    /**
-     * 将文件转换成 ByteArrayOutputStream
-     * @param path
-     * @return
-     * @throws IOException
-     */
-    public static ByteArrayOutputStream readFileState(String path) throws IOException {
-        String str = "";
-        BufferedInputStream buff;
-        ByteArrayOutputStream output = null;
-        try {
-            buff = new BufferedInputStream(new FileInputStream(path));
-            byte[] bytes=new byte[1024];
-            int line;
-            output = new ByteArrayOutputStream();
-            while( (line = buff.read(bytes)) != -1) {
-                output.write(bytes,0,line);
-            }
-            buff.close();
-        }catch(IOException e) {
-            e.printStackTrace();
-        }
-        return output;
-    }
-
-    /**
-     * niod的方式写入文件
-     * @param fileName
-     * @param text
-     * @throws IOException
-     */
-    public static void writeFileState(String fileName, String text) throws IOException {
-        FileOutputStream fileOutputStream = null;
-        try {
-            fileOutputStream = new FileOutputStream(new File(fileName));
-            FileChannel fileChannel = fileOutputStream.getChannel();
-            ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(text);
-            int length = 0;
-            try {
-                while ((length = fileChannel.write(byteBuffer)) != 0) {
-                    logger.info("file length have written: " + length);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e) {
-            logger.error("写入文件异常： ",e);
-        }finally {
-            if (fileOutputStream != null) {
-                fileOutputStream.close();
-            }
-        }
-
-    }
 
 
 }
